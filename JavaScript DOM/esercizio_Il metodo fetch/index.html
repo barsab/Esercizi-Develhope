@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Il Signore degli Anelli</title>
+  <style>
+    :root {
+      --bg: #0f1222;
+      --panel: #171a2e;
+      --text: #e7e9ee;
+      --muted: #9aa3b2;
+      --accent: #8fd3ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 80% -10%, #1c2246, var(--bg));
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      place-items: start center;
+      padding: 32px 16px 56px;
+    }
+    .wrap {
+      width: min(960px, 100%);
+    }
+    h1 { font-size: 22px; margin: 0 0 12px; font-weight: 700; letter-spacing: .2px; }
+    p.help { color: var(--muted); margin: 0 0 16px; }
+
+    .controls {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      backdrop-filter: blur(6px);
+    }
+    .controls input[type="text"] {
+      flex: 1;
+      padding: 10px 12px;
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      color: var(--text);
+      outline: none;
+    }
+    .controls button {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: linear-gradient(180deg, #293155, #1d2342);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .controls button:hover { filter: brightness(1.08); }
+
+    .card {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 18px;
+      align-items: start;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.3);
+    }
+    .card .imgbox {
+      width: 100%;
+      aspect-ratio: 63/88; /* vicina alle carte standard */
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.1);
+      background: #0b0e1d;
+      display: grid;
+      place-items: center;
+    }
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .meta h2 { margin: 0; font-size: 24px; }
+    .meta .code { color: var(--muted); font-size: 13px; margin-top: 6px; }
+    .error { margin-top: 16px; color: #ffb4b4; }
+    @media (max-width: 720px) {
+      .card { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Mostra una carta da <em>RingsDB</em></h1>
+    <p class="help">Inserisci un <strong>card code</strong> (es. <code>01001</code> per Aragorn) e premi «Carica».</p>
+
+    <div class="controls">
+      <input id="code" type="text" value="01001" placeholder="Es. 01001" aria-label="Card code" />
+      <button id="loadBtn">Carica</button>
+    </div>
+
+    <div id="out"></div>
+    <div id="err" class="error" role="alert" aria-live="polite"></div>
+  </div>
+
+  <script>
+    const out = document.getElementById('out');
+    const err = document.getElementById('err');
+    const codeInput = document.getElementById('code');
+    const btn = document.getElementById('loadBtn');
+
+    async function loadCard(code) {
+      err.textContent = '';
+      out.innerHTML = '';
+      if (!code) return;
+
+      // URL COMPLETI con <dominio> come richiesto
+      const apiUrl = `https://ringsdb.com/api/public/card/${encodeURIComponent(code)}`;
+
+      try {
+        const res = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        // L'oggetto carta contiene: name, code, imagesrc, url (vedi doc API)
+        const name = data.name || '(senza nome)';
+        const imgPath = data.imagesrc || data.image || data.img || '';
+        const imgUrl = imgPath ? new URL(imgPath, 'https://ringsdb.com').href : '';
+        const pageUrl = data.url || `https://ringsdb.com/card/${encodeURIComponent(code)}`;
+
+        const cardEl = document.createElement('div');
+        cardEl.className = 'card';
+        cardEl.innerHTML = `
+          <div class="imgbox">${imgUrl ? `<img alt="${name}" src="${imgUrl}"/>` : '<span>Nessuna immagine</span>'}</div>
+          <div class="meta">
+            <h2><a href="${pageUrl}" target="_blank" rel="noopener noreferrer">${name}</a></h2>
+            <div class="code">Codice: <code>${data.code || code}</code></div>
+          </div>
+        `;
+        out.appendChild(cardEl);
+      } catch (e) {
+        console.error(e);
+        err.textContent = `Impossibile caricare la carta ${code}. Controlla il codice o riprova più tardi.`;
+      }
+    }
+
+    btn.addEventListener('click', () => loadCard(codeInput.value.trim()));
+    codeInput.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') btn.click(); });
+
+    // Caricamento iniziale
+    loadCard(codeInput.value.trim());
+  </script>
+</body>
+</html>
+
