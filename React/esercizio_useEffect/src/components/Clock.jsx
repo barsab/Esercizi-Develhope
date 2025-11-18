@@ -1,0 +1,17 @@
+import React, { useState, useEffect } from 'react';
+
+function Clock() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  return <h2>Ora corrente: {currentTime.toLocaleTimeString()}</h2>;
+}
+
+export default Clock;
