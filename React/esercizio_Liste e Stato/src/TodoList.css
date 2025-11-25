@@ -1,0 +1,41 @@
+ul {
+  list-style-position: inside;
+}
+
+li {
+  align-items: center;
+  padding: 4px 0;
+  font-size: 1rem;
+}
+
+input[type="text"] {
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  height: 36px;
+}
+
+button {
+  background-color: #4dabf7;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  height: 38px;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #339af0;
+}
+
+button:last-of-type {
+  margin: 0.5rem;
+  width: 20%;
+  background-color: #868e96;
+}
+
+button:last-of-type:hover {
+  background-color: #495057;
+}
